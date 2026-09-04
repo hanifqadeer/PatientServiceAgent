@@ -1,0 +1,11 @@
+.plan-card {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.plan-card:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f3f3);
+}
+.summary-text {
+    white-space: pre-line;
+    line-height: 1.6;
+}

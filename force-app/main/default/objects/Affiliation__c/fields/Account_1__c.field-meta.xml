@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_1__c</fullName>
+    <label>Account 1</label>
+    <description>Primary account in the affiliation (e.g., the Patient or HCP). Master-Detail controls sharing — child inherits parent sharing.</description>
+    <type>MasterDetail</type>
+    <referenceTo>Account</referenceTo>
+    <relationshipName>Affiliations_As_Primary</relationshipName>
+    <relationshipLabel>Affiliations (Primary)</relationshipLabel>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

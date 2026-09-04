@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Care Program</label>
+    <pluralLabel>Care Programs</pluralLabel>
+    <nameField>
+        <label>Care Program Name</label>
+        <type>Text</type>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <enableActivities>true</enableActivities>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <description>Master definition for a pharmaceutical care program (e.g., Commercial Copay, Free Drug, Bridge, Hub Services). Patient-specific participation is tracked via Patient Support Plans (Cases).</description>
+</CustomObject>

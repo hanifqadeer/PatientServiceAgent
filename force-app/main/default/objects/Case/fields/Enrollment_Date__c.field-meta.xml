@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Enrollment_Date__c</fullName>
+    <label>Enrollment Date</label>
+    <description>Date the patient was enrolled into the Care Program.</description>
+    <type>Date</type>
+    <required>false</required>
+</CustomField>

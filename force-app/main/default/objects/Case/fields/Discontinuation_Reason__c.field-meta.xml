@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Discontinuation_Reason__c</fullName>
+    <label>Discontinuation Reason</label>
+    <description>Reason for discontinuing the Patient Support Plan before completion.</description>
+    <type>TextArea</type>
+    <required>false</required>
+</CustomField>

@@ -1,0 +1,39 @@
+<template>
+    <lightning-card title="Select Care Program" icon-name="standard:program">
+        <div class="slds-p-around_medium">
+            <lightning-input
+                type="search"
+                label="Search Programs"
+                placeholder="Search active programs..."
+                onchange={handleSearch}
+                class="slds-m-bottom_small">
+            </lightning-input>
+            <template if:true={filteredPrograms}>
+                <template for:each={filteredPrograms} for:item="program">
+                    <div key={program.Id}
+                         class={program.cssClass}
+                         onclick={handleProgramSelect}
+                         data-id={program.Id}>
+                        <div class="slds-grid slds-grid_align-spread">
+                            <div>
+                                <p class="slds-text-heading_small">{program.Name}</p>
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    {program.Program_Type__c} · {program.Therapy_Area__c}
+                                </p>
+                                <p class="slds-text-body_small">{program.Product_Name__c}</p>
+                            </div>
+                            <div>
+                                <lightning-badge label={program.Status__c}></lightning-badge>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+            <template if:false={filteredPrograms}>
+                <div class="slds-align_absolute-center slds-p-around_large">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

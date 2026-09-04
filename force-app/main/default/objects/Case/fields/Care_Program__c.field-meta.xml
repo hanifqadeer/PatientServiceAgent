@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Care_Program__c</fullName>
+    <label>Care Program</label>
+    <description>The Care Program this Patient Support Plan is associated with.</description>
+    <type>Lookup</type>
+    <referenceTo>Care_Program__c</referenceTo>
+    <relationshipName>Patient_Support_Plans</relationshipName>
+    <relationshipLabel>Patient Support Plans</relationshipLabel>
+    <required>false</required>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>

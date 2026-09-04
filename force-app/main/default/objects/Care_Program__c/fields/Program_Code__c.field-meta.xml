@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Program_Code__c</fullName>
+    <label>Program Code</label>
+    <description>Unique code identifying this care program. Used as an external ID for integration and deduplication.</description>
+    <type>Text</type>
+    <length>20</length>
+    <required>true</required>
+    <unique>true</unique>
+    <externalId>true</externalId>
+    <caseSensitive>false</caseSensitive>
+</CustomField>

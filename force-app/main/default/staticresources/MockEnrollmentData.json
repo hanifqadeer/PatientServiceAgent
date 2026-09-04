@@ -1,0 +1,78 @@
+{
+  "enrollments": [
+    {
+      "patient": {
+        "firstName": "Sarah",
+        "lastName": "Johnson",
+        "dateOfBirth": "1985-03-15",
+        "phone": "(555) 234-5678",
+        "email": "sarah.johnson@example.com",
+        "street": "742 Evergreen Terrace",
+        "city": "Springfield",
+        "state": "IL",
+        "postalCode": "62704",
+        "preferredLanguage": "English",
+        "communicationPreference": "Phone"
+      },
+      "hcp": {
+        "firstName": "Michael",
+        "lastName": "Chen",
+        "npi": "1234567890",
+        "specialty": "Oncology"
+      },
+      "hco": {
+        "name": "Springfield Memorial Hospital",
+        "siteType": "Hospital"
+      },
+      "program": {
+        "code": "ONCO-HUB-001",
+        "name": "Oncology Hub Services",
+        "therapyArea": "Oncology",
+        "productName": "Nexavar"
+      },
+      "payer": {
+        "name": "Blue Cross Blue Shield",
+        "memberId": "BCBS-9876543",
+        "groupNumber": "GRP-12345"
+      },
+      "enrollmentSource": "Fax"
+    },
+    {
+      "patient": {
+        "firstName": "James",
+        "lastName": "Williams",
+        "dateOfBirth": "1972-11-08",
+        "phone": "(555) 876-5432",
+        "email": "j.williams@example.com",
+        "street": "123 Oak Drive",
+        "city": "Chicago",
+        "state": "IL",
+        "postalCode": "60601",
+        "preferredLanguage": "English",
+        "communicationPreference": "Email"
+      },
+      "hcp": {
+        "firstName": "Lisa",
+        "lastName": "Park",
+        "npi": "9876543210",
+        "specialty": "Rheumatology"
+      },
+      "hco": {
+        "name": "Chicago Specialty Clinic",
+        "siteType": "Clinic"
+      },
+      "program": {
+        "code": "RHEUM-COPAY-002",
+        "name": "Rheumatology Copay Assistance",
+        "therapyArea": "Rheumatology",
+        "productName": "Humira"
+      },
+      "payer": {
+        "name": "Aetna",
+        "memberId": "AET-1122334",
+        "groupNumber": "GRP-56789"
+      },
+      "enrollmentSource": "eForm"
+    }
+  ]
+}

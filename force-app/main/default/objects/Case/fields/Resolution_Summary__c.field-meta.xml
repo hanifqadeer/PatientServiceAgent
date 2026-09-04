@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Resolution_Summary__c</fullName>
+    <label>Resolution Summary</label>
+    <description>Summary of the resolution or outcome when the case is closed.</description>
+    <type>LongTextArea</type>
+    <length>32000</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+</CustomField>

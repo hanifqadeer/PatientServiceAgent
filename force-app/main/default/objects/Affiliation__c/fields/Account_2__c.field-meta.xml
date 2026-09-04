@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_2__c</fullName>
+    <label>Account 2</label>
+    <description>Secondary account in the affiliation (e.g., the HCP or HCO). Lookup rather than master-detail to allow flexible many-to-many.</description>
+    <type>Lookup</type>
+    <referenceTo>Account</referenceTo>
+    <relationshipName>Affiliations_As_Secondary</relationshipName>
+    <relationshipLabel>Affiliations (Secondary)</relationshipLabel>
+    <required>true</required>
+    <deleteConstraint>Restrict</deleteConstraint>
+</CustomField>

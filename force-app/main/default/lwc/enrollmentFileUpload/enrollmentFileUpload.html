@@ -1,0 +1,22 @@
+<template>
+    <lightning-card title="Upload Enrollment Document" icon-name="standard:file">
+        <div class="slds-p-around_medium">
+            <lightning-file-upload
+                label="Upload Enrollment Form"
+                name="enrollmentFile"
+                accept={acceptedFormats}
+                record-id={recordId}
+                onuploadfinished={handleUploadFinished}
+                multiple>
+            </lightning-file-upload>
+            <template if:true={uploadedFiles}>
+                <div class="slds-m-top_medium">
+                    <p class="slds-text-body_regular slds-text-color_success">
+                        <lightning-icon icon-name="utility:check" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        {uploadedFiles.length} file(s) uploaded successfully.
+                    </p>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

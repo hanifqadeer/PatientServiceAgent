@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Support_Category__c</fullName>
+    <label>Support Category</label>
+    <description>Category of the support case request.</description>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Benefits Verification</fullName><default>false</default><label>Benefits Verification</label></value>
+            <value><fullName>Prior Authorization</fullName><default>false</default><label>Prior Authorization</label></value>
+            <value><fullName>Appeals</fullName><default>false</default><label>Appeals</label></value>
+            <value><fullName>Reimbursement</fullName><default>false</default><label>Reimbursement</label></value>
+            <value><fullName>Education</fullName><default>false</default><label>Education</label></value>
+            <value><fullName>Program Question</fullName><default>false</default><label>Program Question</label></value>
+            <value><fullName>General Assistance</fullName><default>false</default><label>General Assistance</label></value>
+            <value><fullName>Appointment</fullName><default>false</default><label>Appointment</label></value>
+            <value><fullName>Site of Care</fullName><default>false</default><label>Site of Care</label></value>
+            <value><fullName>Provider Coordination</fullName><default>false</default><label>Provider Coordination</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

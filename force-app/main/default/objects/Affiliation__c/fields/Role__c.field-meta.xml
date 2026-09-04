@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Role__c</fullName>
+    <label>Role</label>
+    <description>The role of Account 2 in relation to Account 1.</description>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Prescriber</fullName><default>false</default><label>Prescriber</label></value>
+            <value><fullName>Referring</fullName><default>false</default><label>Referring</label></value>
+            <value><fullName>Treating</fullName><default>false</default><label>Treating</label></value>
+            <value><fullName>Consulting</fullName><default>false</default><label>Consulting</label></value>
+            <value><fullName>Staff Physician</fullName><default>false</default><label>Staff Physician</label></value>
+            <value><fullName>Affiliated</fullName><default>false</default><label>Affiliated</label></value>
+            <value><fullName>Admitting</fullName><default>false</default><label>Admitting</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

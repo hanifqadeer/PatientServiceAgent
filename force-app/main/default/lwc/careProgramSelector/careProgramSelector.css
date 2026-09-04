@@ -1,0 +1,8 @@
+.program-card {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-radius: 0.25rem;
+}
+.program-card:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f3f3);
+}

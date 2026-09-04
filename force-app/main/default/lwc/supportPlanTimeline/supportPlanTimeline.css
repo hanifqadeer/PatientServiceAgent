@@ -1,0 +1,12 @@
+.status-closed {
+    --sds-c-badge-color-background: #04844b;
+    --sds-c-badge-text-color: #ffffff;
+}
+.status-in-progress {
+    --sds-c-badge-color-background: #0176d3;
+    --sds-c-badge-text-color: #ffffff;
+}
+.status-new {
+    --sds-c-badge-color-background: #706e6b;
+    --sds-c-badge-text-color: #ffffff;
+}

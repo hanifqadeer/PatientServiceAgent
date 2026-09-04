@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Plan_Start_Date__c</fullName>
+    <label>Plan Start Date</label>
+    <description>Date when active support under this plan begins.</description>
+    <type>Date</type>
+    <required>false</required>
+</CustomField>

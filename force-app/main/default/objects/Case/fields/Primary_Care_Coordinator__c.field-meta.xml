@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Primary_Care_Coordinator__c</fullName>
+    <label>Primary Care Coordinator</label>
+    <description>The primary care coordinator assigned to this Patient Support Plan.</description>
+    <type>Lookup</type>
+    <referenceTo>User</referenceTo>
+    <relationshipName>Coordinated_Plans</relationshipName>
+    <relationshipLabel>Coordinated Plans</relationshipLabel>
+    <required>false</required>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>

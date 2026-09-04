@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <description>Before-save Flow on Case: when Status is set to Closed, validates that Resolution_Summary__c is populated. Prevents closure without a summary.</description>
+    <label>Case Closure Validation</label>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>Case</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+        <connector>
+            <targetReference>Check_Closure_Validation</targetReference>
+        </connector>
+    </start>
+    <decisions>
+        <name>Check_Closure_Validation</name>
+        <label>Check Closure Validation</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <defaultConnectorLabel>No Validation Needed</defaultConnectorLabel>
+        <rules>
+            <name>Is_Closing_Without_Summary</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Closed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Resolution_Summary__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Add_Error_Message</targetReference>
+            </connector>
+            <label>Is Closing Without Summary</label>
+        </rules>
+    </decisions>
+    <customErrors>
+        <name>Add_Error_Message</name>
+        <label>Add Error Message</label>
+        <locationX>264</locationX>
+        <locationY>314</locationY>
+        <customErrorMessages>
+            <errorMessage>A Resolution Summary is required before closing a case.</errorMessage>
+            <fieldSelection>Resolution_Summary__c</fieldSelection>
+            <isFieldError>true</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+</Flow>

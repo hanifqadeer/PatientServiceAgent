@@ -1,0 +1,48 @@
+<template>
+    <lightning-card title="Support Plan Timeline" icon-name="standard:task2">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+        <template if:true={timelineItems.length}>
+            <div class="slds-p-around_medium">
+                <ul class="slds-timeline">
+                    <template for:each={timelineItems} for:item="item">
+                        <li key={item.id}>
+                            <div class="slds-timeline__item_expandable">
+                                <span class={item.iconContainerClass}>
+                                    <lightning-icon icon-name={item.iconName} size="x-small"
+                                        variant="inverse"></lightning-icon>
+                                </span>
+                                <div class="slds-media slds-media_center slds-m-left_small slds-m-bottom_small">
+                                    <div class="slds-media__body">
+                                        <div class="slds-grid slds-grid_align-spread">
+                                            <p class="slds-text-body_regular">
+                                                <strong>{item.subject}</strong>
+                                            </p>
+                                            <lightning-badge label={item.status} class={item.statusCss}></lightning-badge>
+                                        </div>
+                                        <p class="slds-text-body_small slds-text-color_weak">
+                                            {item.type} · {item.dateDisplay}
+                                        </p>
+                                        <template if:true={item.detail}>
+                                            <p class="slds-text-body_small slds-m-top_xx-small">{item.detail}</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        <template if:false={timelineItems.length}>
+            <template if:false={isLoading}>
+                <div class="slds-p-around_medium slds-text-align_center">
+                    <p class="slds-text-color_weak">No activity recorded for this plan.</p>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

@@ -1,0 +1,12 @@
+.confidence-high {
+    --sds-c-badge-color-background: #04844b;
+    --sds-c-badge-text-color: #ffffff;
+}
+.confidence-medium {
+    --sds-c-badge-color-background: #fe9339;
+    --sds-c-badge-text-color: #ffffff;
+}
+.confidence-low {
+    --sds-c-badge-color-background: #ea001e;
+    --sds-c-badge-text-color: #ffffff;
+}

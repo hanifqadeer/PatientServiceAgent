@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Access_Reimbursement</fullName>
+    
+    <active>true</active>
+    <businessProcess>Support_Process</businessProcess>
+    <description>Service request Case for access and reimbursement support: Benefits Verification, Prior Authorization, Appeals, Reimbursement assistance.</description>
+    <label>Access &amp; Reimbursement</label>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+</RecordType>

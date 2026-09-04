@@ -1,0 +1,127 @@
+<template>
+    <lightning-card title="Patient 360 Summary" icon-name="standard:person_account">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+        <template if:true={summaryData}>
+            <div class="slds-p-around_medium">
+                <!-- Patient Header -->
+                <div class="slds-media slds-m-bottom_medium">
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name="standard:person_account" size="large"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <h2 class="slds-text-heading_medium">
+                            {summaryData.patient.FirstName} {summaryData.patient.LastName}
+                        </h2>
+                        <p class="slds-text-body_small slds-text-color_weak">
+                            DOB: {summaryData.patient.PersonBirthdate} ·
+                            {summaryData.patient.Phone} ·
+                            {summaryData.patient.PersonEmail}
+                        </p>
+                        <p class="slds-text-body_small">
+                            Language: {summaryData.patient.Preferred_Language__c} ·
+                            Contact Pref: {summaryData.patient.Communication_Preference__c}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- AI Support Summary -->
+                <template if:true={planSummary}>
+                    <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">
+                            <lightning-icon icon-name="utility:einstein" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                            Support Summary
+                        </h3>
+                        <p class="slds-text-body_regular summary-text">{planSummary.summaryText}</p>
+                        <template if:true={planSummary.attentionFlags.length}>
+                            <div class="slds-m-top_small">
+                                <template for:each={planSummary.attentionFlags} for:item="flag">
+                                    <p key={flag} class="slds-text-color_error slds-text-body_small">⚠ {flag}</p>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Active Support Plans -->
+                <div class="slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Active Support Plans</h3>
+                    <template if:true={summaryData.supportPlans.length}>
+                        <template for:each={summaryData.supportPlans} for:item="plan">
+                            <div key={plan.Id} class="slds-box slds-m-bottom_x-small slds-p-around_small plan-card"
+                                 onclick={handlePlanClick} data-id={plan.Id}>
+                                <div class="slds-grid slds-grid_align-spread">
+                                    <div>
+                                        <p class="slds-text-body_regular"><strong>{plan.Subject}</strong></p>
+                                        <p class="slds-text-body_small slds-text-color_weak">
+                                            {plan.Care_Program__r.Name} · Coordinator: {plan.Primary_Care_Coordinator__r.Name}
+                                        </p>
+                                    </div>
+                                    <lightning-badge label={plan.Status}></lightning-badge>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={summaryData.supportPlans.length}>
+                        <p class="slds-text-body_small slds-text-color_weak">No active support plans.</p>
+                    </template>
+                </div>
+
+                <!-- Recent Cases -->
+                <div class="slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Recent Cases</h3>
+                    <template if:true={summaryData.recentCases.length}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={summaryData.recentCases}
+                            columns={caseColumns}
+                            hide-checkbox-column>
+                        </lightning-datatable>
+                    </template>
+                    <template if:false={summaryData.recentCases.length}>
+                        <p class="slds-text-body_small slds-text-color_weak">No recent cases.</p>
+                    </template>
+                </div>
+
+                <!-- Related HCPs/HCOs -->
+                <div class="slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Related Providers &amp; Organizations</h3>
+                    <template if:true={summaryData.affiliations.length}>
+                        <template for:each={summaryData.affiliations} for:item="aff">
+                            <div key={aff.Id} class="slds-box slds-m-bottom_x-small slds-p-around_small">
+                                <p class="slds-text-body_regular">
+                                    <strong>{aff.Account_2__r.Name}</strong>
+                                    <lightning-badge label={aff.Role__c} class="slds-m-left_x-small"></lightning-badge>
+                                    <template if:true={aff.Is_Primary__c}>
+                                        <lightning-badge label="Primary" class="slds-m-left_x-small slds-badge_inverse"></lightning-badge>
+                                    </template>
+                                </p>
+                                <p class="slds-text-body_small slds-text-color_weak">{aff.Affiliation_Type__c}</p>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={summaryData.affiliations.length}>
+                        <p class="slds-text-body_small slds-text-color_weak">No affiliations found.</p>
+                    </template>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+                    <lightning-button-group>
+                        <lightning-button label="New Case" icon-name="utility:new" onclick={handleNewCase}></lightning-button>
+                        <lightning-button label="New Task" icon-name="utility:task" onclick={handleNewTask}></lightning-button>
+                        <lightning-button label="Log Event" icon-name="utility:event" onclick={handleLogEvent}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </div>
+        </template>
+
+        <template if:true={error}>
+            <div class="slds-p-around_medium">
+                <p class="slds-text-color_error">{error}</p>
+            </div>
+        </template>
+    </lightning-card>
+</template>
