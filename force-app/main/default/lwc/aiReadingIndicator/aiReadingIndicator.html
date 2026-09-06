@@ -1,0 +1,39 @@
+<template>
+    <div class="reader" role="status" aria-live="polite">
+        <!-- Document being scanned -->
+        <div class="reader__stage">
+            <div class="reader__page">
+                <div class="reader__line reader__line_title"></div>
+                <div class="reader__line reader__line_long"></div>
+                <div class="reader__line reader__line_short"></div>
+                <div class="reader__line reader__line_long"></div>
+                <div class="reader__line reader__line_medium"></div>
+                <div class="reader__line reader__line_short"></div>
+                <div class="reader__line reader__line_long"></div>
+                <div class="reader__line reader__line_medium"></div>
+            </div>
+            <div class="reader__scan"></div>
+        </div>
+
+        <div class="reader__copy">
+            <p class="reader__headline">
+                <span class="reader__spark">&#10022;</span>
+                Reading the enrollment form
+            </p>
+            <p class="reader__stepline">{currentStep}</p>
+            <template lwc:if={fileName}>
+                <p class="reader__file">{fileName}</p>
+            </template>
+
+            <div class="reader__dots" aria-hidden="true">
+                <span class="reader__dot"></span>
+                <span class="reader__dot"></span>
+                <span class="reader__dot"></span>
+            </div>
+
+            <p class="reader__note">
+                Extracted data is reviewed by you before any record is created.
+            </p>
+        </div>
+    </div>
+</template>

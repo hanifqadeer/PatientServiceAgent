@@ -10,3 +10,98 @@
     --sds-c-badge-color-background: #ea001e;
     --sds-c-badge-text-color: #ffffff;
 }
+
+/* ── Warnings ──
+   Previously rendered as inline spans, which ran together into one unreadable line.
+   A numbered list gives each warning its own row so it can be worked through. */
+
+.warning-panel {
+    background: #fef8f3;
+    border: 1px solid #fe9339;
+    border-left-width: 0.25rem;
+}
+
+.warning-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: warning;
+}
+
+.warning-list__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.3125rem 0;
+    line-height: 1.45;
+}
+
+.warning-list__item + .warning-list__item {
+    border-top: 1px solid #f4d9c2;
+}
+
+.warning-list__number {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: #fe9339;
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.125rem;
+}
+
+.warning-list__text {
+    flex: 1;
+}
+
+/* ── Edited fields ──
+   A left accent on anything the specialist changed, so their own corrections are
+   distinguishable at a glance from what the model returned. */
+
+.field {
+    border-left: 0.1875rem solid transparent;
+    padding-left: 0.5rem;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.field_edited {
+    border-left-color: #1589ee;
+}
+
+.field_edited::after {
+    content: 'Edited';
+    display: inline-block;
+    margin-top: 0.1875rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #1589ee;
+}
+
+/* ── Patient match cards ── */
+
+.match-card {
+    border-left: 0.25rem solid #1589ee;
+}
+
+.match-strong {
+    --sds-c-badge-color-background: #04844b;
+    --sds-c-badge-text-color: #ffffff;
+}
+
+.match-possible {
+    --sds-c-badge-color-background: #706e6b;
+    --sds-c-badge-text-color: #ffffff;
+}
+
+/* ── Success ── */
+
+.success-panel {
+    max-width: 34rem;
+}

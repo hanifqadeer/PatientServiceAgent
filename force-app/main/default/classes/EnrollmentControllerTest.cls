@@ -46,7 +46,8 @@ private class EnrollmentControllerTest {
         String extractionJson = JSON.serialize(extraction);
 
         Test.startTest();
-        EnrollmentService.EnrollmentResult result = EnrollmentController.confirmEnrollment(extractionJson, null);
+        EnrollmentService.EnrollmentResult result = EnrollmentController.confirmEnrollment(
+            extractionJson, null, null);
         Test.stopTest();
 
         System.assertNotEquals(null, result.patientId);
@@ -61,10 +62,15 @@ private class EnrollmentControllerTest {
 
         Test.startTest();
         try {
-            EnrollmentController.confirmEnrollment(extractionJson, null);
+            EnrollmentController.confirmEnrollment(extractionJson, null, null);
             System.assert(false, 'Should have thrown AuraHandledException.');
         } catch (AuraHandledException e) {
-            System.assert(String.isNotBlank(e.getMessage()));
+            // Without setMessage() on the controller side this reads "Script-thrown exception"
+            // and the browser shows the specialist nothing useful.
+            System.assert(
+                e.getMessage().contains('INVALID-CODE'),
+                'The real reason must survive to the browser. Got: ' + e.getMessage()
+            );
         }
         Test.stopTest();
     }
