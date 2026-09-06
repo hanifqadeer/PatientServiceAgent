@@ -34,6 +34,12 @@ public with sharing class EnrollmentExtractionResult {
     @AuraEnabled public String hcoTaxId;
 
     // ── Program / Therapy ──
+    /**
+     * Resolved Care Program record. The model returns a code; AIExtractionService matches it
+     * against the org's active programs and stamps the Id here, so the review UI can offer a
+     * real selection and the plan links to a record rather than to a string that may not exist.
+     */
+    @AuraEnabled public String careProgramId;
     @AuraEnabled public String programCode;
     @AuraEnabled public String programName;
     @AuraEnabled public String therapyArea;
@@ -43,6 +49,7 @@ public with sharing class EnrollmentExtractionResult {
     @AuraEnabled public String payerName;
     @AuraEnabled public String memberId;
     @AuraEnabled public String groupNumber;
+    @AuraEnabled public String coverageType;
 
     // ── Enrollment Metadata ──
     @AuraEnabled public String enrollmentSource;

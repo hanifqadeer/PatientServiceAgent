@@ -154,6 +154,47 @@
                     </div>
                 </template>
 
+                <!-- Document Details -->
+                <div class="slds-section slds-is-open slds-m-bottom_medium">
+                    <h3 class="slds-section__title">
+                        <span class="slds-truncate slds-p-horizontal_small">Document Details</span>
+                    </h3>
+                    <div class="slds-section__content slds-p-around_small">
+                        <template lwc:if={extraction.documentType}>
+                            <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                Identified as: {extraction.documentType}
+                            </p>
+                        </template>
+                        <lightning-layout multiple-rows>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <div class={fieldClass.externalReferenceNumber}>
+                                    <lightning-input label="Form Reference Number"
+                                        value={extraction.externalReferenceNumber}
+                                        onchange={handleFieldChange}
+                                        data-field="externalReferenceNumber"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <div class={fieldClass.enrollmentDate}>
+                                    <lightning-input type="date" label="Date Received"
+                                        value={extraction.enrollmentDate}
+                                        onchange={handleFieldChange}
+                                        data-field="enrollmentDate"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <div class={fieldClass.enrollmentSource}>
+                                    <lightning-combobox label="Enrollment Source"
+                                        value={extraction.enrollmentSource}
+                                        options={enrollmentSourceOptions}
+                                        onchange={handleFieldChange}
+                                        data-field="enrollmentSource"></lightning-combobox>
+                                </div>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </div>
+
                 <!-- Patient Information -->
                 <div class="slds-section slds-is-open slds-m-bottom_medium">
                     <h3 class="slds-section__title">
@@ -188,10 +229,42 @@
                                         onchange={handleFieldChange} data-field="phone"></lightning-input>
                                 </div>
                             </lightning-layout-item>
-                            <lightning-layout-item size="6" padding="around-small">
+                            <lightning-layout-item size="12" padding="around-small">
                                 <div class={fieldClass.email}>
                                     <lightning-input type="email" label="Email" value={extraction.email}
                                         onchange={handleFieldChange} data-field="email"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" padding="around-small">
+                                <div class={fieldClass.street}>
+                                    <lightning-input label="Street" value={extraction.street}
+                                        onchange={handleFieldChange} data-field="street"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.city}>
+                                    <lightning-input label="City" value={extraction.city}
+                                        onchange={handleFieldChange} data-field="city"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.state}>
+                                    <lightning-input label="State" value={extraction.state}
+                                        onchange={handleFieldChange} data-field="state"
+                                        max-length="2"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.postalCode}>
+                                    <lightning-input label="Postal Code" value={extraction.postalCode}
+                                        onchange={handleFieldChange} data-field="postalCode"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.country}>
+                                    <lightning-input label="Country" value={extraction.country}
+                                        onchange={handleFieldChange} data-field="country"
+                                        placeholder="US"></lightning-input>
                                 </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
@@ -199,6 +272,14 @@
                                     <lightning-combobox label="Preferred Language" value={extraction.preferredLanguage}
                                         options={languageOptions} onchange={handleFieldChange}
                                         data-field="preferredLanguage"></lightning-combobox>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <div class={fieldClass.communicationPreference}>
+                                    <lightning-combobox label="Communication Preference"
+                                        value={extraction.communicationPreference}
+                                        options={communicationOptions} onchange={handleFieldChange}
+                                        data-field="communicationPreference"></lightning-combobox>
                                 </div>
                             </lightning-layout-item>
                         </lightning-layout>
@@ -209,28 +290,66 @@
                 <div class="slds-section slds-is-open slds-m-bottom_medium">
                     <h3 class="slds-section__title">
                         <span class="slds-truncate slds-p-horizontal_small">
-                            Healthcare Provider
+                            Prescribing Physician
                             <lightning-badge label={hcpConfidenceLabel} class={hcpConfidenceCss}></lightning-badge>
                         </span>
                     </h3>
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.hcpFirstName}>
                                     <lightning-input label="HCP First Name" value={extraction.hcpFirstName}
                                         onchange={handleFieldChange} data-field="hcpFirstName"></lightning-input>
                                 </div>
                             </lightning-layout-item>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.hcpLastName}>
                                     <lightning-input label="HCP Last Name" value={extraction.hcpLastName}
                                         onchange={handleFieldChange} data-field="hcpLastName"></lightning-input>
                                 </div>
                             </lightning-layout-item>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.hcpNpi}>
                                     <lightning-input label="NPI Number" value={extraction.hcpNpi}
-                                        onchange={handleFieldChange} data-field="hcpNpi"></lightning-input>
+                                        onchange={handleFieldChange} data-field="hcpNpi"
+                                        field-level-help="Ten digits. Left blank when the form's value is not a valid NPI."></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.hcpSpecialty}>
+                                    <lightning-combobox label="Specialty" value={extraction.hcpSpecialty}
+                                        options={specialtyOptions} onchange={handleFieldChange}
+                                        data-field="hcpSpecialty"></lightning-combobox>
+                                </div>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </div>
+
+                <!-- HCO Information -->
+                <div class="slds-section slds-is-open slds-m-bottom_medium">
+                    <h3 class="slds-section__title">
+                        <span class="slds-truncate slds-p-horizontal_small">Treatment Facility</span>
+                    </h3>
+                    <div class="slds-section__content slds-p-around_small">
+                        <lightning-layout multiple-rows>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <div class={fieldClass.hcoName}>
+                                    <lightning-input label="Facility Name" value={extraction.hcoName}
+                                        onchange={handleFieldChange} data-field="hcoName"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.hcoSiteType}>
+                                    <lightning-combobox label="Site Type" value={extraction.hcoSiteType}
+                                        options={siteTypeOptions} onchange={handleFieldChange}
+                                        data-field="hcoSiteType"></lightning-combobox>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.hcoTaxId}>
+                                    <lightning-input label="Tax ID" value={extraction.hcoTaxId}
+                                        onchange={handleFieldChange} data-field="hcoTaxId"></lightning-input>
                                 </div>
                             </lightning-layout-item>
                         </lightning-layout>
@@ -241,22 +360,55 @@
                 <div class="slds-section slds-is-open slds-m-bottom_medium">
                     <h3 class="slds-section__title">
                         <span class="slds-truncate slds-p-horizontal_small">
-                            Program &amp; Therapy
+                            Care Program
                             <lightning-badge label={programConfidenceLabel} class={programConfidenceCss}></lightning-badge>
                         </span>
                     </h3>
                     <div class="slds-section__content slds-p-around_small">
+                        <template lwc:if={unmatchedProgramCode}>
+                            <p class="slds-text-body_small slds-text-color_error slds-m-bottom_x-small">
+                                The form reads "{unmatchedProgramCode}", which is not an active care
+                                program here. Select the correct program below.
+                            </p>
+                        </template>
+                        <template lwc:if={programLoadError}>
+                            <p class="slds-text-body_small slds-text-color_error slds-m-bottom_x-small">
+                                {programLoadError}
+                            </p>
+                        </template>
                         <lightning-layout multiple-rows>
                             <lightning-layout-item size="6" padding="around-small">
-                                <div class={fieldClass.programCode}>
-                                    <lightning-input label="Program Code" value={extraction.programCode}
-                                        onchange={handleFieldChange} data-field="programCode"></lightning-input>
+                                <div class={fieldClass.careProgramId}>
+                                    <lightning-combobox label="Care Program" required
+                                        value={extraction.careProgramId}
+                                        options={programOptions}
+                                        placeholder="Select a care program"
+                                        onchange={handleProgramChange}
+                                        field-level-help="The support plan links to this record. Selecting a program fills in the therapy area and product from the program itself."></lightning-combobox>
                                 </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <lightning-input label="Program Code" value={extraction.programCode}
+                                    readonly></lightning-input>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
                                 <div class={fieldClass.therapyArea}>
                                     <lightning-input label="Therapy Area" value={extraction.therapyArea}
                                         onchange={handleFieldChange} data-field="therapyArea"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <div class={fieldClass.productName}>
+                                    <lightning-input label="Product / Drug Name" value={extraction.productName}
+                                        onchange={handleFieldChange} data-field="productName"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="12" padding="around-small">
+                                <div class={fieldClass.servicesRequested}>
+                                    <lightning-checkbox-group label="Requested Services"
+                                        options={serviceOptions}
+                                        value={extraction.servicesRequested}
+                                        onchange={handleServicesChange}></lightning-checkbox-group>
                                 </div>
                             </lightning-layout-item>
                         </lightning-layout>
@@ -273,22 +425,55 @@
                     </h3>
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.payerName}>
                                     <lightning-input label="Payer Name" value={extraction.payerName}
                                         onchange={handleFieldChange} data-field="payerName"></lightning-input>
                                 </div>
                             </lightning-layout-item>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.memberId}>
                                     <lightning-input label="Member ID" value={extraction.memberId}
                                         onchange={handleFieldChange} data-field="memberId"></lightning-input>
                                 </div>
                             </lightning-layout-item>
-                            <lightning-layout-item size="4" padding="around-small">
+                            <lightning-layout-item size="3" padding="around-small">
                                 <div class={fieldClass.groupNumber}>
                                     <lightning-input label="Group Number" value={extraction.groupNumber}
                                         onchange={handleFieldChange} data-field="groupNumber"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <div class={fieldClass.coverageType}>
+                                    <lightning-input label="Coverage Type" value={extraction.coverageType}
+                                        onchange={handleFieldChange} data-field="coverageType"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </div>
+
+                <!-- Consent and Signatures -->
+                <div class="slds-section slds-is-open slds-m-bottom_medium">
+                    <h3 class="slds-section__title">
+                        <span class="slds-truncate slds-p-horizontal_small">Consent &amp; Signatures</span>
+                    </h3>
+                    <div class="slds-section__content slds-p-around_small">
+                        <lightning-layout multiple-rows>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <div class={fieldClass.patientConsentSigned}>
+                                    <lightning-input type="checkbox" label="Patient consent signed"
+                                        checked={extraction.patientConsentSigned}
+                                        onchange={handleCheckboxChange}
+                                        data-field="patientConsentSigned"></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="6" padding="around-small">
+                                <div class={fieldClass.prescriberSignaturePresent}>
+                                    <lightning-input type="checkbox" label="Prescriber signature present"
+                                        checked={extraction.prescriberSignaturePresent}
+                                        onchange={handleCheckboxChange}
+                                        data-field="prescriberSignaturePresent"></lightning-input>
                                 </div>
                             </lightning-layout-item>
                         </lightning-layout>
@@ -334,10 +519,27 @@
                             {syncedFieldsMessage}
                         </p>
                     </template>
+                    <template lwc:if={providerSummary}>
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                            {providerSummary}
+                        </p>
+                    </template>
+                    <template lwc:if={affiliationMessage}>
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                            {affiliationMessage}
+                        </p>
+                    </template>
                     <template lwc:if={documentLinkedMessage}>
                         <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
                             {documentLinkedMessage}
                         </p>
+                    </template>
+                    <template lwc:if={affiliationError}>
+                        <div class="slds-box warning-panel slds-m-top_small slds-text-body_small slds-text-align_left">
+                            <lightning-icon icon-name="utility:warning" size="x-small"
+                                class="slds-m-right_x-small"></lightning-icon>
+                            {affiliationError}
+                        </div>
                     </template>
 
                     <div class="slds-m-top_large slds-grid slds-grid_align-center slds-wrap slds-gutters_x-small">
@@ -349,6 +551,12 @@
                             <lightning-button label="View Support Plan"
                                 icon-name="utility:case" onclick={handleViewPlan}></lightning-button>
                         </div>
+                        <template lwc:if={hasHcp}>
+                            <div class="slds-col slds-p-around_xx-small">
+                                <lightning-button label="View Prescriber"
+                                    icon-name="utility:people" onclick={handleViewPrescriber}></lightning-button>
+                            </div>
+                        </template>
                         <div class="slds-col slds-p-around_xx-small">
                             <lightning-button label="Start New Enrollment"
                                 icon-name="utility:upload" onclick={handleReset}></lightning-button>

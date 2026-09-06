@@ -129,6 +129,65 @@ private class EnrollmentExtractionMapperTest {
     }
 
     @IsTest
+    static void rejectsAnEnrollmentSourceTheOrgWouldNotAccept() {
+        // Observed from a real extraction: a form reading "Secure portal" produced "Portal",
+        // which belongs to communicationPreference. Enrollment_Source__c is a restricted
+        // picklist, so this would have failed the Case insert after the patient was created.
+        String json = '{"patient":{"lastName":"Marin","confidence":0.9},' +
+            '"program":{"programCode":"TEST-RHEUM-101","confidence":0.9},' +
+            '"enrollment":{"enrollmentSource":"Portal","confidence":0.7},"warnings":[]}';
+
+        Test.startTest();
+        EnrollmentExtractionResult result = EnrollmentExtractionMapper.fromGeneratedText(json);
+        Test.stopTest();
+
+        System.assertEquals(
+            null,
+            result.enrollmentSource,
+            'A value outside the picklist must not reach the Case insert.'
+        );
+        System.assert(
+            containsText(result.warnings, 'enrollment source'),
+            'The reviewer must be told which field to fix. Got: ' + result.warnings
+        );
+    }
+
+    @IsTest
+    static void normalisesControlledValuesToTheOrgsCasing() {
+        String json = '{"patient":{"lastName":"Marin","preferredLanguage":"english",' +
+            '"communicationPreference":"EMAIL","confidence":0.9},' +
+            '"hcp":{"specialty":"rheumatology","confidence":0.8},' +
+            '"hco":{"siteType":"clinic","confidence":0.8},' +
+            '"enrollment":{"enrollmentSource":"fax","confidence":0.9},"warnings":[]}';
+
+        Test.startTest();
+        EnrollmentExtractionResult result = EnrollmentExtractionMapper.fromGeneratedText(json);
+        Test.stopTest();
+
+        System.assertEquals('English', result.preferredLanguage, 'Casing should match the picklist.');
+        System.assertEquals('Email', result.communicationPreference, 'Casing should match the picklist.');
+        System.assertEquals('Rheumatology', result.hcpSpecialty, 'Casing should match the picklist.');
+        System.assertEquals('Clinic', result.hcoSiteType, 'Casing should match the picklist.');
+        System.assertEquals('Fax', result.enrollmentSource, 'Casing should match the picklist.');
+    }
+
+    @IsTest
+    static void rejectsASiteTypeTheOrgWouldNotAccept() {
+        // The reference form reads "Specialty clinic", which is not in Site_Type__c.
+        String json = '{"patient":{"lastName":"Marin","confidence":0.9},' +
+            '"hco":{"name":"Demo Harbor","siteType":"Specialty Practice","confidence":0.8},' +
+            '"program":{"programCode":"X","confidence":0.9},"warnings":[]}';
+
+        Test.startTest();
+        EnrollmentExtractionResult result = EnrollmentExtractionMapper.fromGeneratedText(json);
+        Test.stopTest();
+
+        System.assertEquals(null, result.hcoSiteType, 'An unmappable site type should be null.');
+        System.assertEquals('Demo Harbor', result.hcoName, 'The rest of the section should survive.');
+        System.assert(containsText(result.warnings, 'site type'), 'The field should be named in a warning.');
+    }
+
+    @IsTest
     static void clampsConfidenceIntoRange() {
         String json = '{"patient":{"lastName":"Doe","confidence":1.7},' +
             '"hcp":{"confidence":-3},"program":{"programCode":"X","confidence":"not a number"},' +
