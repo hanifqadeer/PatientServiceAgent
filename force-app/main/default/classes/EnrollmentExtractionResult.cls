@@ -18,6 +18,7 @@ public with sharing class EnrollmentExtractionResult {
     @AuraEnabled public String city;
     @AuraEnabled public String state;
     @AuraEnabled public String postalCode;
+    @AuraEnabled public String country;
     @AuraEnabled public String preferredLanguage;
     @AuraEnabled public String communicationPreference;
 
@@ -30,6 +31,7 @@ public with sharing class EnrollmentExtractionResult {
     // ── HCO Information ──
     @AuraEnabled public String hcoName;
     @AuraEnabled public String hcoSiteType;
+    @AuraEnabled public String hcoTaxId;
 
     // ── Program / Therapy ──
     @AuraEnabled public String programCode;
@@ -44,6 +46,27 @@ public with sharing class EnrollmentExtractionResult {
 
     // ── Enrollment Metadata ──
     @AuraEnabled public String enrollmentSource;
+    @AuraEnabled public Date enrollmentDate;
+    /** The form's own intake number, e.g. ENR-2026-00417. Maps to Case.External_Reference_Number__c. */
+    @AuraEnabled public String externalReferenceNumber;
+    @AuraEnabled public Boolean patientConsentSigned;
+    @AuraEnabled public Boolean prescriberSignaturePresent;
+    /**
+     * Services ticked on the form (Benefits Verification, Prior Authorization, ...).
+     * Captured for the reviewer and for the child-Case automation that follows; nothing
+     * downstream consumes it yet.
+     */
+    @AuraEnabled public List<String> servicesRequested;
+
+    // ── Provenance ──
+    // Stamped on every result so a confirmed enrollment can be traced back to the file
+    // and the prompt template that produced it.
+    @AuraEnabled public String extractionMode; // 'AI' or 'MOCK'
+    @AuraEnabled public String sourceDocumentId;
+    @AuraEnabled public String sourceFileName;
+    @AuraEnabled public String documentType;
+    @AuraEnabled public String promptTemplate;
+    @AuraEnabled public Datetime extractedAt;
 
     // ── Confidence Scores (0.0 – 1.0 per field group) ──
     @AuraEnabled public Decimal patientConfidence;
@@ -51,16 +74,25 @@ public with sharing class EnrollmentExtractionResult {
     @AuraEnabled public Decimal programConfidence;
     @AuraEnabled public Decimal payerConfidence;
 
+    /**
+     * The weakest section score, not an average. An average hides the one section that
+     * was unreadable behind three that were clean, which is exactly the case a reviewer
+     * needs flagged.
+     */
+    @AuraEnabled public Decimal overallConfidence;
+
     // ── Overall extraction status ──
     @AuraEnabled public Boolean isComplete;
     @AuraEnabled public List<String> warnings;
 
     public EnrollmentExtractionResult() {
         this.warnings = new List<String>();
+        this.servicesRequested = new List<String>();
         this.isComplete = false;
         this.patientConfidence = 0.0;
         this.hcpConfidence = 0.0;
         this.programConfidence = 0.0;
         this.payerConfidence = 0.0;
+        this.overallConfidence = 0.0;
     }
 }

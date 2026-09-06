@@ -47,8 +47,10 @@ public with sharing class PatientService {
             PersonEmail = extraction.email,
             PersonMailingStreet = extraction.street,
             PersonMailingCity = extraction.city,
-            PersonMailingState = extraction.state,
+            PersonMailingStateCode = extraction.state,
             PersonMailingPostalCode = extraction.postalCode,
+            PersonMailingCountryCode = String.isNotBlank(extraction.country)
+                ? extraction.country : 'US',
             Preferred_Language__c = extraction.preferredLanguage,
             Communication_Preference__c = extraction.communicationPreference
         );

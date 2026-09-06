@@ -10,8 +10,10 @@ export default class EnrollmentFileUpload extends LightningElement {
 
     uploadedFiles;
 
+    // Only what the multimodal prompt template can actually read. Offering .tiff, .doc or
+    // .docx here just moves the rejection from the file picker to the extraction step.
     get acceptedFormats() {
-        return ['.pdf', '.png', '.jpg', '.jpeg', '.tiff', '.doc', '.docx'];
+        return ['.pdf', '.png', '.jpg', '.jpeg'];
     }
 
     handleUploadFinished(event) {
