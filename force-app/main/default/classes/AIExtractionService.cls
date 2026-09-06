@@ -46,7 +46,11 @@ public with sharing class AIExtractionService {
             throw new AIExtractionException(e.getMessage());
         }
 
-        String generatedText = generate(document);
+        // Loaded once: the catalog grounds the prompt, and the same records resolve the code
+        // the model returns back to a real Care Program.
+        List<Care_Program__c> activePrograms = programService.getActivePrograms();
+
+        String generatedText = generate(document, activePrograms);
 
         EnrollmentExtractionResult result;
         try {
@@ -55,14 +59,46 @@ public with sharing class AIExtractionService {
             throw new AIExtractionException(e.getMessage());
         }
 
+        resolveCareProgram(result, activePrograms);
         stampProvenance(result, document);
         return result;
     }
 
-    private String generate(EnrollmentDocument document) {
+    /**
+     * Turns the program code the model read off the form into a Care Program record.
+     *
+     * The code alone is a string that may or may not exist. Resolving it here means the review
+     * screen can present a real selection, and the support plan links to a record rather than
+     * to text that fails a lookup at the last step. Details are taken from the record, not the
+     * document, so a mistyped therapy area on a fax cannot contradict the program catalog.
+     */
+    @TestVisible
+    private void resolveCareProgram(EnrollmentExtractionResult result, List<Care_Program__c> activePrograms) {
+        if (String.isBlank(result.programCode)) {
+            return; // The mapper already warned that no program was identified.
+        }
+
+        for (Care_Program__c program : activePrograms) {
+            if (result.programCode.equalsIgnoreCase(program.Program_Code__c)) {
+                result.careProgramId = program.Id;
+                result.programCode = program.Program_Code__c; // Normalise casing to the record.
+                result.programName = program.Name;
+                result.therapyArea = program.Therapy_Area__c;
+                result.productName = program.Product_Name__c;
+                return;
+            }
+        }
+
+        result.warnings.add(
+            'The program code on the form ("' + result.programCode + '") does not match an ' +
+            'active care program. Choose the correct program before confirming.'
+        );
+    }
+
+    private String generate(EnrollmentDocument document, List<Care_Program__c> activePrograms) {
         Map<String, ConnectApi.WrappedValue> inputParams = new Map<String, ConnectApi.WrappedValue>{
             'Input:enrollmentDocument' => PromptTemplateService.recordValue(document.contentDocumentId),
-            'Input:programCatalog' => PromptTemplateService.textValue(buildProgramCatalog()),
+            'Input:programCatalog' => PromptTemplateService.textValue(buildProgramCatalog(activePrograms)),
             'Input:receivedDate' => PromptTemplateService.textValue(String.valueOf(Date.today()))
         };
 
@@ -82,8 +118,7 @@ public with sharing class AIExtractionService {
      * code from verbatim.
      */
     @TestVisible
-    private String buildProgramCatalog() {
-        List<Care_Program__c> programs = programService.getActivePrograms();
+    private String buildProgramCatalog(List<Care_Program__c> programs) {
         if (programs.isEmpty()) {
             return 'No active care programs are configured in this org. Return null for programCode.';
         }

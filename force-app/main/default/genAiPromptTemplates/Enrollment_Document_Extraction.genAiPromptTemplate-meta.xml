@@ -171,7 +171,7 @@ Respond with a single JSON object and nothing else. No preamble, no explanation,
   &quot;hcp&quot;: { &quot;firstName&quot;: null, &quot;lastName&quot;: null, &quot;npi&quot;: null, &quot;specialty&quot;: null, &quot;confidence&quot;: 0.0 },
   &quot;hco&quot;: { &quot;name&quot;: null, &quot;siteType&quot;: null, &quot;taxId&quot;: null, &quot;confidence&quot;: 0.0 },
   &quot;program&quot;: { &quot;programCode&quot;: null, &quot;programName&quot;: null, &quot;therapyArea&quot;: null, &quot;productName&quot;: null, &quot;confidence&quot;: 0.0 },
-  &quot;payer&quot;: { &quot;payerName&quot;: null, &quot;memberId&quot;: null, &quot;groupNumber&quot;: null, &quot;confidence&quot;: 0.0 },
+  &quot;payer&quot;: { &quot;payerName&quot;: null, &quot;memberId&quot;: null, &quot;groupNumber&quot;: null, &quot;coverageType&quot;: null, &quot;confidence&quot;: 0.0 },
   &quot;enrollment&quot;: {
     &quot;enrollmentSource&quot;: null, &quot;enrollmentDate&quot;: null,
     &quot;servicesRequested&quot;: [&quot;only the services actually marked on the form, copied as written&quot;],

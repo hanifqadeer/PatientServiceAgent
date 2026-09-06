@@ -136,7 +136,7 @@ private class EnrollmentMatchingTest {
         List<Care_Program__c> programs = TestDataFactory.createCarePrograms(2);
         new PatientSupportPlanService().createPlan(patient.Id, programs[0].Id, 'Fax', null);
 
-        Integer patientsBefore = [SELECT COUNT() FROM Account];
+        Integer patientsBefore = [SELECT COUNT() FROM Account WHERE RecordType.DeveloperName = 'Patient'];
 
         Test.startTest();
         EnrollmentService.EnrollmentResult result = new EnrollmentService().processEnrollment(
@@ -146,7 +146,11 @@ private class EnrollmentMatchingTest {
 
         System.assertEquals(patient.Id, result.patientId, 'The existing patient should be reused.');
         System.assert(!result.isNewPatient, 'No new patient record should be created.');
-        System.assertEquals(patientsBefore, [SELECT COUNT() FROM Account], 'Account count must not grow.');
+        System.assertEquals(
+            patientsBefore,
+            [SELECT COUNT() FROM Account WHERE RecordType.DeveloperName = 'Patient'],
+            'Patient count must not grow. HCP and HCO accounts are created separately and by design.'
+        );
         System.assertEquals(
             2,
             [SELECT COUNT() FROM Case WHERE AccountId = :patient.Id AND RecordType.DeveloperName = 'Patient_Support_Plan'],
@@ -287,7 +291,7 @@ private class EnrollmentMatchingTest {
     @IsTest
     static void validatesTheProgramBeforeCreatingAnyPatient() {
         EnrollmentExtractionResult extraction = TestDataFactory.createMockExtraction('NO-SUCH-PROGRAM');
-        Integer patientsBefore = [SELECT COUNT() FROM Account];
+        Integer patientsBefore = [SELECT COUNT() FROM Account WHERE RecordType.DeveloperName = 'Patient'];
 
         Test.startTest();
         try {
@@ -300,9 +304,115 @@ private class EnrollmentMatchingTest {
 
         System.assertEquals(
             patientsBefore,
-            [SELECT COUNT() FROM Account],
+            [SELECT COUNT() FROM Account WHERE RecordType.DeveloperName = 'Patient'],
             'A bad program code must not leave an orphan patient behind.'
         );
+    }
+
+    // ── Care Program lookup ──
+
+    @IsTest
+    static void prefersTheSelectedProgramRecordOverTheCodeOnTheForm() {
+        List<Care_Program__c> programs = TestDataFactory.createCarePrograms(2);
+        EnrollmentExtractionResult extraction = TestDataFactory.createMockExtraction(
+            programs[0].Program_Code__c
+        );
+        // The specialist corrected the program on the review screen; the code is now stale.
+        extraction.careProgramId = programs[1].Id;
+
+        Test.startTest();
+        EnrollmentService.EnrollmentResult result = new EnrollmentService()
+            .processEnrollment(extraction, null, null);
+        Test.stopTest();
+
+        System.assertEquals(
+            programs[1].Id,
+            result.programId,
+            'A record the specialist chose must win over a code read off the document.'
+        );
+        System.assertEquals(
+            programs[1].Id,
+            [SELECT Care_Program__c FROM Case WHERE Id = :result.planId].Care_Program__c,
+            'The support plan must link to the selected program.'
+        );
+    }
+
+    @IsTest
+    static void fallsBackToTheProgramCodeWhenNoRecordWasSelected() {
+        Care_Program__c program = TestDataFactory.createCarePrograms(1)[0];
+        EnrollmentExtractionResult extraction = TestDataFactory.createMockExtraction(
+            program.Program_Code__c
+        );
+        extraction.careProgramId = null; // Payload built before the lookup existed.
+
+        Test.startTest();
+        EnrollmentService.EnrollmentResult result = new EnrollmentService()
+            .processEnrollment(extraction, null, null);
+        Test.stopTest();
+
+        System.assertEquals(program.Id, result.programId, 'The code should still resolve.');
+    }
+
+    @IsTest
+    static void survivesAMalformedProgramIdFromTheBrowser() {
+        Care_Program__c program = TestDataFactory.createCarePrograms(1)[0];
+        EnrollmentExtractionResult extraction = TestDataFactory.createMockExtraction(
+            program.Program_Code__c
+        );
+        extraction.careProgramId = 'not-an-id';
+
+        Test.startTest();
+        EnrollmentService.EnrollmentResult result = new EnrollmentService()
+            .processEnrollment(extraction, null, null);
+        Test.stopTest();
+
+        System.assertEquals(
+            program.Id,
+            result.programId,
+            'A malformed id should fall back to the code, not throw an opaque error.'
+        );
+    }
+
+    @IsTest
+    static void resolvesTheExtractedCodeToACareProgramRecord() {
+        Care_Program__c program = TestDataFactory.createCarePrograms(1)[0];
+        EnrollmentExtractionResult extraction = new EnrollmentExtractionResult();
+        extraction.programCode = program.Program_Code__c.toLowerCase(); // Casing differs on the fax.
+
+        Test.startTest();
+        new AIExtractionService().resolveCareProgram(
+            extraction, new List<Care_Program__c>{ program }
+        );
+        Test.stopTest();
+
+        System.assertEquals(program.Id, extraction.careProgramId, 'The code should resolve to a record.');
+        System.assertEquals(
+            program.Program_Code__c,
+            extraction.programCode,
+            'Casing should normalise to the record so the UI shows the canonical code.'
+        );
+        System.assertEquals(
+            program.Therapy_Area__c,
+            extraction.therapyArea,
+            'Program details should come from the record, not the document.'
+        );
+    }
+
+    @IsTest
+    static void warnsWhenTheExtractedCodeMatchesNoActiveProgram() {
+        EnrollmentExtractionResult extraction = new EnrollmentExtractionResult();
+        extraction.programCode = 'TEST-RHEUM-101';
+
+        Test.startTest();
+        new AIExtractionService().resolveCareProgram(extraction, new List<Care_Program__c>());
+        Test.stopTest();
+
+        System.assertEquals(null, extraction.careProgramId, 'Nothing should be resolved.');
+        Boolean warned = false;
+        for (String warning : extraction.warnings) {
+            warned = warned || warning.contains('TEST-RHEUM-101');
+        }
+        System.assert(warned, 'The specialist needs to know the code matched nothing. Got: ' + extraction.warnings);
     }
 
     @IsTest

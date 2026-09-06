@@ -9,6 +9,28 @@
  */
 public with sharing class EnrollmentExtractionMapper {
     /**
+     * The values each controlled field will actually accept, mirroring the org's picklists.
+     *
+     * The prompt asks the model to map onto these and to return null rather than stretch a
+     * mapping, but a prompt is a request, not a guarantee. Observed in practice: a form reading
+     * "Secure portal" produced enrollmentSource "Portal" — a value that belongs to
+     * communicationPreference, not this list. Enrollment_Source__c is a restricted picklist, so
+     * that would have failed the Case insert at the very last step, after the patient had
+     * already been created. Enforcing here turns a hard failure into a warning the reviewer can
+     * resolve on screen.
+     */
+    private static final Map<String, Set<String>> ALLOWED_VALUES = new Map<String, Set<String>>{
+        'preferredLanguage' => new Set<String>{ 'English', 'Spanish', 'French', 'Mandarin', 'Other' },
+        'communicationPreference' => new Set<String>{ 'Phone', 'Email', 'Mail', 'Portal' },
+        'specialty' => new Set<String>{
+            'Oncology', 'Rheumatology', 'Neurology', 'Dermatology',
+            'Gastroenterology', 'Internal Medicine', 'Other'
+        },
+        'siteType' => new Set<String>{ 'Hospital', 'Clinic', 'Pharmacy', 'Infusion Center' },
+        'enrollmentSource' => new Set<String>{ 'Fax', 'eForm', 'Phone', 'HCP Referral', 'Web' }
+    };
+
+    /**
      * @description Map generated text onto the extraction DTO.
      * @param generatedText Raw text from the prompt template.
      * @return A populated result. Never null.
@@ -52,8 +74,8 @@ public with sharing class EnrollmentExtractionMapper {
         result.state = str(patient, 'state');
         result.postalCode = str(patient, 'postalCode');
         result.country = str(patient, 'country');
-        result.preferredLanguage = str(patient, 'preferredLanguage');
-        result.communicationPreference = str(patient, 'communicationPreference');
+        result.preferredLanguage = controlled(patient, 'preferredLanguage', 'preferredLanguage', 'preferred language', result);
+        result.communicationPreference = controlled(patient, 'communicationPreference', 'communicationPreference', 'communication preference', result);
         result.patientConfidence = confidence(patient);
     }
 
@@ -64,7 +86,7 @@ public with sharing class EnrollmentExtractionMapper {
         result.hcpFirstName = str(hcp, 'firstName');
         result.hcpLastName = str(hcp, 'lastName');
         result.hcpNpi = str(hcp, 'npi');
-        result.hcpSpecialty = str(hcp, 'specialty');
+        result.hcpSpecialty = controlled(hcp, 'specialty', 'specialty', 'prescriber specialty', result);
         result.hcpConfidence = confidence(hcp);
     }
 
@@ -73,7 +95,7 @@ public with sharing class EnrollmentExtractionMapper {
             return;
         }
         result.hcoName = str(hco, 'name');
-        result.hcoSiteType = str(hco, 'siteType');
+        result.hcoSiteType = controlled(hco, 'siteType', 'siteType', 'site type', result);
         result.hcoTaxId = str(hco, 'taxId');
     }
 
@@ -95,6 +117,7 @@ public with sharing class EnrollmentExtractionMapper {
         result.payerName = str(payer, 'payerName');
         result.memberId = str(payer, 'memberId');
         result.groupNumber = str(payer, 'groupNumber');
+        result.coverageType = str(payer, 'coverageType');
         result.payerConfidence = confidence(payer);
     }
 
@@ -102,7 +125,7 @@ public with sharing class EnrollmentExtractionMapper {
         if (enrollment == null) {
             return;
         }
-        result.enrollmentSource = str(enrollment, 'enrollmentSource');
+        result.enrollmentSource = controlled(enrollment, 'enrollmentSource', 'enrollmentSource', 'enrollment source', result);
         result.enrollmentDate = parseDate(str(enrollment, 'enrollmentDate'), 'enrollment date', result);
         result.patientConsentSigned = bool(enrollment, 'patientConsentSigned');
         result.prescriberSignaturePresent = bool(enrollment, 'prescriberSignaturePresent');
@@ -189,6 +212,36 @@ public with sharing class EnrollmentExtractionMapper {
                 'The prompt template returned malformed JSON: ' + e.getMessage()
             );
         }
+    }
+
+    /**
+     * Reads a controlled field and keeps it only if the org would accept the value.
+     *
+     * Matching is case-insensitive and normalises to the org's own casing, so "fax" becomes
+     * "Fax". Anything outside the list becomes null plus a warning naming both the field and
+     * what was read, which is the same contract the prompt asks the model to follow.
+     */
+    private static String controlled(
+        Map<String, Object> source,
+        String key,
+        String allowedKey,
+        String fieldLabel,
+        EnrollmentExtractionResult result
+    ) {
+        String value = str(source, key);
+        if (value == null) {
+            return null;
+        }
+        for (String allowed : ALLOWED_VALUES.get(allowedKey)) {
+            if (allowed.equalsIgnoreCase(value)) {
+                return allowed;
+            }
+        }
+        result.warnings.add(
+            'The ' + fieldLabel + ' read from the form ("' + value + '") is not a value this org ' +
+            'accepts. Choose one before confirming.'
+        );
+        return null;
     }
 
     private static Map<String, Object> asMap(Object value) {

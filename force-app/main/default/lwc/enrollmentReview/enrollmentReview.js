@@ -1,8 +1,9 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import extractFromDocument from '@salesforce/apex/EnrollmentController.extractFromDocument';
 import findPatientMatches from '@salesforce/apex/EnrollmentController.findPatientMatches';
 import confirmEnrollment from '@salesforce/apex/EnrollmentController.confirmEnrollment';
+import getActivePrograms from '@salesforce/apex/EnrollmentController.getActivePrograms';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const STEPS = {
@@ -18,21 +19,70 @@ const IDENTITY_FIELDS = ['firstName', 'lastName', 'dateOfBirth', 'email'];
 
 /** Editable fields, in display order. Drives both the edited-field styling and the summary. */
 const FIELD_LABELS = {
+    // Document
+    externalReferenceNumber: 'Form Reference Number',
+    enrollmentDate: 'Date Received',
+    enrollmentSource: 'Enrollment Source',
+    // Patient
     firstName: 'First Name',
     lastName: 'Last Name',
     dateOfBirth: 'Date of Birth',
     phone: 'Phone',
     email: 'Email',
+    street: 'Street',
+    city: 'City',
+    state: 'State',
+    postalCode: 'Postal Code',
+    country: 'Country',
     preferredLanguage: 'Preferred Language',
+    communicationPreference: 'Communication Preference',
+    // Prescriber
     hcpFirstName: 'HCP First Name',
     hcpLastName: 'HCP Last Name',
     hcpNpi: 'NPI Number',
-    programCode: 'Program Code',
+    hcpSpecialty: 'Specialty',
+    // Facility
+    hcoName: 'Facility Name',
+    hcoSiteType: 'Site Type',
+    hcoTaxId: 'Tax ID',
+    // Program
+    careProgramId: 'Care Program',
     therapyArea: 'Therapy Area',
+    productName: 'Product / Drug Name',
+    // Payer
     payerName: 'Payer Name',
     memberId: 'Member ID',
-    groupNumber: 'Group Number'
+    groupNumber: 'Group Number',
+    coverageType: 'Coverage Type',
+    // Consent
+    patientConsentSigned: 'Patient Consent Signed',
+    prescriberSignaturePresent: 'Prescriber Signature Present',
+    servicesRequested: 'Requested Services'
 };
+
+/** Picklist values, matching the org's fields so a selection is always saveable. */
+const COMMUNICATION_PREFERENCES = ['Phone', 'Email', 'Mail', 'Portal'];
+const LANGUAGES = ['English', 'Spanish', 'French', 'Mandarin', 'Other'];
+const SPECIALTIES = [
+    'Oncology',
+    'Rheumatology',
+    'Neurology',
+    'Dermatology',
+    'Gastroenterology',
+    'Internal Medicine',
+    'Other'
+];
+const SITE_TYPES = ['Hospital', 'Clinic', 'Pharmacy', 'Infusion Center'];
+const ENROLLMENT_SOURCES = ['Fax', 'eForm', 'Phone', 'HCP Referral', 'Web'];
+const REQUESTED_SERVICES = [
+    'Benefits Verification',
+    'Prior Authorization',
+    'Copay Assistance',
+    'Free Drug / PAP',
+    'Nurse Educator'
+];
+
+const toOptions = (values) => values.map((value) => ({ label: value, value }));
 
 const EDITED_CSS = 'field field_edited';
 const UNEDITED_CSS = 'field';
@@ -189,7 +239,7 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
     }
 
     get isConfirmDisabled() {
-        return !this.extraction.lastName || !this.extraction.programCode;
+        return !this.extraction.lastName || !this.extraction.careProgramId;
     }
 
     get confirmLabel() {
@@ -208,14 +258,48 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
             : null;
     }
 
-    get languageOptions() {
-        return [
-            { label: 'English', value: 'English' },
-            { label: 'Spanish', value: 'Spanish' },
-            { label: 'French', value: 'French' },
-            { label: 'Mandarin', value: 'Mandarin' },
-            { label: 'Other', value: 'Other' }
-        ];
+    // ── Picklist options ──
+
+    get languageOptions() { return toOptions(LANGUAGES); }
+    get communicationOptions() { return toOptions(COMMUNICATION_PREFERENCES); }
+    get specialtyOptions() { return toOptions(SPECIALTIES); }
+    get siteTypeOptions() { return toOptions(SITE_TYPES); }
+    get enrollmentSourceOptions() { return toOptions(ENROLLMENT_SOURCES); }
+    get serviceOptions() { return toOptions(REQUESTED_SERVICES); }
+
+    // ── Care Program lookup ──
+
+    programs = [];
+    programLoadError = null;
+
+    @wire(getActivePrograms)
+    wiredPrograms({ data, error }) {
+        if (data) {
+            this.programs = data;
+            this.programLoadError = null;
+        } else if (error) {
+            this.programs = [];
+            this.programLoadError = this._errorMessage(error) || 'Care programs could not be loaded.';
+        }
+    }
+
+    /**
+     * The program is chosen from the org's active programs rather than typed as a code.
+     * A code read off a form is a string that may not exist; a selection is a record, and it is
+     * the record the support plan links to.
+     */
+    get programOptions() {
+        return this.programs.map((program) => ({
+            label: `${program.Name} (${program.Program_Code__c})`,
+            value: program.Id
+        }));
+    }
+
+    /** Set when the model read a code that matched nothing active, so the UI can say so. */
+    get unmatchedProgramCode() {
+        return !this.extraction.careProgramId && this.extraction.programCode
+            ? this.extraction.programCode
+            : null;
     }
 
     // ── Success step ──
@@ -250,9 +334,51 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
 
     get documentLinkedMessage() {
         return this.enrollmentResult.documentLinked
-            ? 'The enrollment form is attached to both the support plan and the patient.'
+            ? 'The enrollment form is attached to everything this enrollment produced.'
             : null;
     }
+
+    /** Reports the prescriber and facility, and whether each was reused or created. */
+    get providerSummary() {
+        const parts = [];
+        if (this.enrollmentResult.hcpName) {
+            parts.push(
+                `Prescriber: ${this.enrollmentResult.hcpName} (${
+                    this.enrollmentResult.isNewHcp ? 'new record' : 'existing record'
+                })`
+            );
+        }
+        if (this.enrollmentResult.hcoName) {
+            parts.push(
+                `Facility: ${this.enrollmentResult.hcoName} (${
+                    this.enrollmentResult.isNewHco ? 'new record' : 'existing record'
+                })`
+            );
+        }
+        return parts.length ? parts.join(' · ') : null;
+    }
+
+    get affiliationMessage() {
+        const created = this.enrollmentResult.affiliationsCreated;
+        if (!created) {
+            return null;
+        }
+        return created === 1
+            ? '1 relationship recorded.'
+            : `${created} relationships recorded.`;
+    }
+
+    /**
+     * Surfaced rather than swallowed. The enrollment succeeded, but somebody looking for the
+     * prescriber on the patient record needs to know why it is not there.
+     */
+    get affiliationError() {
+        return this.enrollmentResult.affiliationError
+            ? `The patient and support plan were created, but the provider relationships could not be recorded: ${this.enrollmentResult.affiliationError}`
+            : null;
+    }
+
+    get hasHcp() { return Boolean(this.enrollmentResult.hcpId); }
 
     // ── Event Handlers ──
 
@@ -278,10 +404,11 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
     }
 
     handleFieldChange(event) {
-        const field = event.target.dataset.field;
-        const value = event.target.value;
+        this._applyEdit(event.target.dataset.field, event.target.value);
+    }
 
-        if (this.extraction[field] === value) {
+    _applyEdit(field, value) {
+        if (!field || this.extraction[field] === value) {
             return;
         }
 
@@ -294,6 +421,36 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
             this.selectedExistingPatientId = null;
             this._refreshMatchesQuietly();
         }
+    }
+
+    /** Checkboxes report state on `checked`, not `value`. */
+    handleCheckboxChange(event) {
+        this._applyEdit(event.target.dataset.field, event.target.checked);
+    }
+
+    /** lightning-checkbox-group reports an array of selected values. */
+    handleServicesChange(event) {
+        this._applyEdit('servicesRequested', event.detail.value);
+    }
+
+    /**
+     * Selecting a program carries its name, therapy area and product across too. Those come from
+     * the record rather than the document, so a misread therapy area on a fax cannot contradict
+     * the program catalog.
+     */
+    handleProgramChange(event) {
+        const careProgramId = event.detail.value;
+        const program = this.programs.find((candidate) => candidate.Id === careProgramId);
+
+        this.extraction = {
+            ...this.extraction,
+            careProgramId,
+            programCode: program ? program.Program_Code__c : this.extraction.programCode,
+            programName: program ? program.Name : this.extraction.programName,
+            therapyArea: program ? program.Therapy_Area__c : this.extraction.therapyArea,
+            productName: program ? program.Product_Name__c : this.extraction.productName
+        };
+        this.editedFields = new Set(this.editedFields).add('careProgramId');
     }
 
     handleSelectExistingPatient(event) {
@@ -360,6 +517,10 @@ export default class EnrollmentReview extends NavigationMixin(LightningElement) 
 
     handleViewPlan() {
         this._navigateToRecord(this.enrollmentResult.planId);
+    }
+
+    handleViewPrescriber() {
+        this._navigateToRecord(this.enrollmentResult.hcpId);
     }
 
     handleReset() {
