@@ -23,6 +23,7 @@ public with sharing class PatientSelector {
         return [
             SELECT Id, FirstName, LastName, PersonBirthdate, PersonEmail,
                    PersonMailingStreet, PersonMailingCity, PersonMailingState,
+                   PersonMailingStateCode, PersonMailingCountryCode,
                    PersonMailingPostalCode, Phone,
                    Preferred_Language__c, Communication_Preference__c,
                    RecordType.DeveloperName
@@ -30,6 +31,78 @@ public with sharing class PatientSelector {
             WHERE Id IN :accountIds
               AND RecordType.DeveloperName = :PATIENT_RT
         ];
+    }
+
+    /**
+     * @description Find patients who might be the person on an enrollment form.
+     *
+     *              Broader than findByNameAndDob, which needs both a last name and a date of
+     *              birth and so misses the common case of a form where the date of birth was
+     *              illegible. Any one of these is enough to surface a candidate:
+     *                - the same email address
+     *                - the same last name and date of birth
+     *                - the same first and last name
+     *
+     *              Deliberately over-matches. A false positive costs the specialist one glance
+     *              at the match screen; a false negative creates a duplicate patient record.
+     *
+     * @param firstName Patient first name.
+     * @param lastName Patient last name.
+     * @param dob Patient date of birth.
+     * @param email Patient email.
+     * @return Candidate patients, at most 50. Empty when there is nothing to search on.
+     */
+    public List<Account> findMatches(String firstName, String lastName, Date dob, String email) {
+        List<String> clauses = new List<String>();
+
+        // Bound to the query below by name; only added when they carry a usable value, because
+        // "PersonEmail = null" would match every patient without an email.
+        String emailBind = String.isBlank(email) ? null : email.trim();
+        String lastNameBind = String.isBlank(lastName) ? null : lastName.trim();
+        String firstNameBind = String.isBlank(firstName) ? null : firstName.trim();
+        Date dobBind = dob;
+
+        if (emailBind != null) {
+            clauses.add('PersonEmail = :emailBind');
+        }
+        if (lastNameBind != null && dobBind != null) {
+            clauses.add('(LastName = :lastNameBind AND PersonBirthdate = :dobBind)');
+        }
+        if (lastNameBind != null && firstNameBind != null) {
+            clauses.add('(LastName = :lastNameBind AND FirstName = :firstNameBind)');
+        }
+        if (clauses.isEmpty()) {
+            return new List<Account>();
+        }
+
+        String query =
+            'SELECT Id, FirstName, LastName, PersonBirthdate, PersonEmail, Phone, ' +
+            'PersonMailingCity, PersonMailingState, RecordType.DeveloperName ' +
+            'FROM Account ' +
+            'WHERE RecordType.DeveloperName = :PATIENT_RT ' +
+            'AND (' + String.join(clauses, ' OR ') + ') ' +
+            'ORDER BY LastModifiedDate DESC ' +
+            'LIMIT 50';
+        return Database.query(query);
+    }
+
+    /**
+     * @description Get the Patient Support Plans held by a set of patients.
+     * @param accountIds Patient Account Ids.
+     * @return PSP Cases with their program, newest first.
+     */
+    public List<Case> getSupportPlansFor(Set<Id> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return new List<Case>();
+        }
+        String query =
+            'SELECT Id, CaseNumber, AccountId, Status, IsClosed, Enrollment_Date__c, ' +
+            'Care_Program__c, Care_Program__r.Name, Care_Program__r.Program_Code__c ' +
+            'FROM Case ' +
+            'WHERE AccountId IN :accountIds ' +
+            'AND RecordType.DeveloperName = \'Patient_Support_Plan\' ' +
+            'ORDER BY CreatedDate DESC';
+        return Database.query(query);
     }
 
     /**

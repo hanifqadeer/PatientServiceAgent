@@ -1,7 +1,7 @@
 <template>
     <lightning-card title="Enrollment Review" icon-name="standard:case">
         <!-- Step 1: Upload -->
-        <template if:true={isUploadStep}>
+        <template lwc:if={isUploadStep}>
             <div class="slds-p-around_medium">
                 <p class="slds-text-body_regular slds-m-bottom_medium">
                     Upload an enrollment document to begin AI-assisted extraction.
@@ -10,16 +10,147 @@
             </div>
         </template>
 
-        <!-- Step 2: Review Extracted Data -->
-        <template if:true={isReviewStep}>
+        <!-- Step 2: AI is reading the document -->
+        <template lwc:if={isExtractingStep}>
+            <c-ai-reading-indicator file-name={fileName}></c-ai-reading-indicator>
+        </template>
+
+        <!-- Step 3: Possible existing patient -->
+        <template lwc:if={isMatchStep}>
             <div class="slds-p-around_medium">
-                <!-- Warnings Banner -->
-                <template if:true={extraction.warnings.length}>
-                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_medium" role="alert">
-                        <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                        <template for:each={extraction.warnings} for:item="warning">
-                            <span key={warning} class="slds-m-right_small">{warning}</span>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <h2 class="slds-text-heading_small slds-m-bottom_x-small">
+                        <lightning-icon icon-name="utility:user" size="x-small"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        {matchHeading}
+                    </h2>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        On the form: {formPatientLabel}
+                    </p>
+                    <p class="slds-text-body_small slds-m-top_x-small">
+                        Adding a plan to an existing patient keeps one record per person. Only create
+                        a new patient if none of these is the same person.
+                    </p>
+                </div>
+
+                <template for:each={decoratedMatches} for:item="match">
+                    <article key={match.patientId} class="slds-box slds-m-bottom_small match-card">
+                        <div class="slds-grid slds-grid_align-spread slds-wrap">
+                            <div>
+                                <h3 class="slds-text-heading_small">
+                                    {match.name}
+                                    <lightning-badge label={match.strength}
+                                        class={match.strengthCss}></lightning-badge>
+                                </h3>
+                                <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                    {match.reasonText}
+                                </p>
+                                <dl class="slds-m-top_x-small slds-text-body_small">
+                                    <template lwc:if={match.email}>
+                                        <div>Email: {match.email}</div>
+                                    </template>
+                                    <template lwc:if={match.birthdate}>
+                                        <div>Date of birth: {match.birthdate}</div>
+                                    </template>
+                                    <template lwc:if={match.city}>
+                                        <div>City: {match.city}</div>
+                                    </template>
+                                </dl>
+                            </div>
+                            <div>
+                                <lightning-button label="View Record" data-patient-id={match.patientId}
+                                    onclick={handleViewMatchedPatient}
+                                    class="slds-m-bottom_x-small"></lightning-button>
+                            </div>
+                        </div>
+
+                        <template lwc:if={match.hasPlans}>
+                            <div class="slds-m-top_small">
+                                <p class="slds-text-title_caps slds-m-bottom_xx-small">Existing support plans</p>
+                                <ul class="slds-list_dotted slds-text-body_small">
+                                    <template for:each={match.planItems} for:item="plan">
+                                        <li key={plan.key}>{plan.label}</li>
+                                    </template>
+                                </ul>
+                            </div>
                         </template>
+
+                        <div class="slds-m-top_small">
+                            <template lwc:if={match.canEnroll}>
+                                <lightning-button variant="brand"
+                                    label="Add New Support Plan to This Patient"
+                                    data-patient-id={match.patientId}
+                                    onclick={handleSelectExistingPatient}></lightning-button>
+                            </template>
+                            <template lwc:else>
+                                <div class="slds-text-color_error slds-text-body_small">
+                                    <lightning-icon icon-name="utility:error" size="xx-small"
+                                        variant="error" class="slds-m-right_xx-small"></lightning-icon>
+                                    {match.blockedReason}
+                                </div>
+                            </template>
+                        </div>
+                    </article>
+                </template>
+
+                <div class="slds-m-top_medium slds-grid slds-grid_align-end">
+                    <lightning-button label="Cancel" onclick={handleBack}
+                        class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="None of These — Create a New Patient"
+                        onclick={handleCreateNewPatient}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 4: Review Extracted Data -->
+        <template lwc:if={isReviewStep}>
+            <div class="slds-p-around_medium">
+                <!-- Provenance -->
+                <template lwc:if={extractionSummary}>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                        {extractionSummary}
+                    </p>
+                </template>
+                <template lwc:if={isMockExtraction}>
+                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_medium" role="alert">
+                        This is sample data, not a reading of your document.
+                    </div>
+                </template>
+
+                <!-- Enrolling into an existing patient -->
+                <template lwc:if={selectedPatientBanner}>
+                    <div class="slds-box slds-theme_info slds-m-bottom_medium slds-text-body_small">
+                        <lightning-icon icon-name="utility:info" size="x-small" variant="inverse"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        {selectedPatientBanner}
+                    </div>
+                </template>
+
+                <!-- Warnings, listed one per line -->
+                <template lwc:if={hasWarnings}>
+                    <div class="slds-box warning-panel slds-m-bottom_medium" role="alert">
+                        <p class="slds-text-title_bold slds-m-bottom_x-small">
+                            <lightning-icon icon-name="utility:warning" size="x-small"
+                                class="slds-m-right_x-small"></lightning-icon>
+                            {warningHeading}
+                        </p>
+                        <ol class="warning-list">
+                            <template for:each={warningItems} for:item="warning">
+                                <li key={warning.key} class="warning-list__item">
+                                    <span class="warning-list__number">{warning.position}</span>
+                                    <span class="warning-list__text">{warning.text}</span>
+                                </li>
+                            </template>
+                        </ol>
+                    </div>
+                </template>
+
+                <!-- What the reviewer changed -->
+                <template lwc:if={hasEdits}>
+                    <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-text-body_small">
+                        <lightning-icon icon-name="utility:edit" size="x-small"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        {editSummary}
                     </div>
                 </template>
 
@@ -34,29 +165,41 @@
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input label="First Name" value={extraction.firstName}
-                                    onchange={handleFieldChange} data-field="firstName"></lightning-input>
+                                <div class={fieldClass.firstName}>
+                                    <lightning-input label="First Name" value={extraction.firstName}
+                                        onchange={handleFieldChange} data-field="firstName"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input label="Last Name" value={extraction.lastName}
-                                    onchange={handleFieldChange} data-field="lastName" required></lightning-input>
+                                <div class={fieldClass.lastName}>
+                                    <lightning-input label="Last Name" value={extraction.lastName}
+                                        onchange={handleFieldChange} data-field="lastName" required></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input type="date" label="Date of Birth" value={extraction.dateOfBirth}
-                                    onchange={handleFieldChange} data-field="dateOfBirth"></lightning-input>
+                                <div class={fieldClass.dateOfBirth}>
+                                    <lightning-input type="date" label="Date of Birth" value={extraction.dateOfBirth}
+                                        onchange={handleFieldChange} data-field="dateOfBirth"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input label="Phone" value={extraction.phone}
-                                    onchange={handleFieldChange} data-field="phone"></lightning-input>
+                                <div class={fieldClass.phone}>
+                                    <lightning-input label="Phone" value={extraction.phone}
+                                        onchange={handleFieldChange} data-field="phone"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input type="email" label="Email" value={extraction.email}
-                                    onchange={handleFieldChange} data-field="email"></lightning-input>
+                                <div class={fieldClass.email}>
+                                    <lightning-input type="email" label="Email" value={extraction.email}
+                                        onchange={handleFieldChange} data-field="email"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-combobox label="Preferred Language" value={extraction.preferredLanguage}
-                                    options={languageOptions} onchange={handleFieldChange}
-                                    data-field="preferredLanguage"></lightning-combobox>
+                                <div class={fieldClass.preferredLanguage}>
+                                    <lightning-combobox label="Preferred Language" value={extraction.preferredLanguage}
+                                        options={languageOptions} onchange={handleFieldChange}
+                                        data-field="preferredLanguage"></lightning-combobox>
+                                </div>
                             </lightning-layout-item>
                         </lightning-layout>
                     </div>
@@ -73,16 +216,22 @@
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="HCP First Name" value={extraction.hcpFirstName}
-                                    onchange={handleFieldChange} data-field="hcpFirstName"></lightning-input>
+                                <div class={fieldClass.hcpFirstName}>
+                                    <lightning-input label="HCP First Name" value={extraction.hcpFirstName}
+                                        onchange={handleFieldChange} data-field="hcpFirstName"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="HCP Last Name" value={extraction.hcpLastName}
-                                    onchange={handleFieldChange} data-field="hcpLastName"></lightning-input>
+                                <div class={fieldClass.hcpLastName}>
+                                    <lightning-input label="HCP Last Name" value={extraction.hcpLastName}
+                                        onchange={handleFieldChange} data-field="hcpLastName"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="NPI Number" value={extraction.hcpNpi}
-                                    onchange={handleFieldChange} data-field="hcpNpi"></lightning-input>
+                                <div class={fieldClass.hcpNpi}>
+                                    <lightning-input label="NPI Number" value={extraction.hcpNpi}
+                                        onchange={handleFieldChange} data-field="hcpNpi"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                         </lightning-layout>
                     </div>
@@ -99,12 +248,16 @@
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input label="Program Code" value={extraction.programCode}
-                                    onchange={handleFieldChange} data-field="programCode"></lightning-input>
+                                <div class={fieldClass.programCode}>
+                                    <lightning-input label="Program Code" value={extraction.programCode}
+                                        onchange={handleFieldChange} data-field="programCode"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="6" padding="around-small">
-                                <lightning-input label="Therapy Area" value={extraction.therapyArea}
-                                    onchange={handleFieldChange} data-field="therapyArea"></lightning-input>
+                                <div class={fieldClass.therapyArea}>
+                                    <lightning-input label="Therapy Area" value={extraction.therapyArea}
+                                        onchange={handleFieldChange} data-field="therapyArea"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                         </lightning-layout>
                     </div>
@@ -121,73 +274,92 @@
                     <div class="slds-section__content slds-p-around_small">
                         <lightning-layout multiple-rows>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="Payer Name" value={extraction.payerName}
-                                    onchange={handleFieldChange} data-field="payerName"></lightning-input>
+                                <div class={fieldClass.payerName}>
+                                    <lightning-input label="Payer Name" value={extraction.payerName}
+                                        onchange={handleFieldChange} data-field="payerName"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="Member ID" value={extraction.memberId}
-                                    onchange={handleFieldChange} data-field="memberId"></lightning-input>
+                                <div class={fieldClass.memberId}>
+                                    <lightning-input label="Member ID" value={extraction.memberId}
+                                        onchange={handleFieldChange} data-field="memberId"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-input label="Group Number" value={extraction.groupNumber}
-                                    onchange={handleFieldChange} data-field="groupNumber"></lightning-input>
+                                <div class={fieldClass.groupNumber}>
+                                    <lightning-input label="Group Number" value={extraction.groupNumber}
+                                        onchange={handleFieldChange} data-field="groupNumber"></lightning-input>
+                                </div>
                             </lightning-layout-item>
                         </lightning-layout>
                     </div>
                 </div>
 
-                <!-- Duplicate Patient Matches -->
-                <template if:true={duplicatePatients.length}>
-                    <div class="slds-box slds-theme_shade slds-m-bottom_medium">
-                        <h3 class="slds-text-heading_small slds-m-bottom_small">
-                            <lightning-icon icon-name="utility:warning" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                            Potential Duplicate Patients Found
-                        </h3>
-                        <lightning-datatable
-                            key-field="Id"
-                            data={duplicatePatients}
-                            columns={duplicateColumns}
-                            onrowselection={handleDuplicateSelect}
-                            max-row-selection="1">
-                        </lightning-datatable>
-                        <p class="slds-text-body_small slds-m-top_small slds-text-color_weak">
-                            Select an existing patient to link, or leave unselected to create a new patient.
-                        </p>
-                    </div>
-                </template>
-
                 <!-- Action Buttons -->
                 <div class="slds-m-top_large slds-grid slds-grid_align-end">
-                    <lightning-button label="Back" onclick={handleBack}
+                    <template lwc:if={patientMatches.length}>
+                        <lightning-button label="Back to Matches" onclick={handleBackToMatches}
+                            class="slds-m-right_small"></lightning-button>
+                    </template>
+                    <lightning-button label="Start Over" onclick={handleBack}
                         class="slds-m-right_small"></lightning-button>
                     <lightning-button variant="destructive" label="Reject" onclick={handleReject}
                         class="slds-m-right_small"></lightning-button>
-                    <lightning-button variant="brand" label="Confirm Enrollment" onclick={handleConfirm}
+                    <lightning-button variant="brand" label={confirmLabel} onclick={handleConfirm}
                         disabled={isConfirmDisabled}></lightning-button>
                 </div>
             </div>
         </template>
 
-        <!-- Step 3: Success -->
-        <template if:true={isSuccessStep}>
-            <div class="slds-p-around_medium slds-align_absolute-center">
-                <div class="slds-text-align_center">
-                    <lightning-icon icon-name="action:approval" size="large" class="slds-m-bottom_medium"></lightning-icon>
-                    <h2 class="slds-text-heading_medium slds-m-bottom_small">Enrollment Complete!</h2>
-                    <p class="slds-text-body_regular slds-m-bottom_small">
-                        Patient Support Plan created successfully.
-                    </p>
-                    <template if:true={enrollmentResult.isNewPatient}>
-                        <p class="slds-text-body_small">A new patient record was created.</p>
+        <!-- Step 5: Success -->
+        <template lwc:if={isSuccessStep}>
+            <div class="slds-p-around_large slds-align_absolute-center">
+                <div class="slds-text-align_center success-panel">
+                    <lightning-icon icon-name="action:approval" size="large"
+                        class="slds-m-bottom_medium"></lightning-icon>
+                    <h2 class="slds-text-heading_medium slds-m-bottom_x-small">{successHeadline}</h2>
+                    <p class="slds-text-body_regular slds-m-bottom_x-small">{successDetail}</p>
+
+                    <template lwc:if={enrollmentResult.isNewPatient}>
+                        <p class="slds-text-body_small slds-text-color_weak">A new patient record was created.</p>
                     </template>
-                    <lightning-button variant="brand" label="Start New Enrollment"
-                        onclick={handleReset} class="slds-m-top_medium"></lightning-button>
+                    <template lwc:else>
+                        <p class="slds-text-body_small slds-text-color_weak">
+                            Added to the existing patient — no duplicate record was created.
+                        </p>
+                    </template>
+
+                    <template lwc:if={syncedFieldsMessage}>
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                            {syncedFieldsMessage}
+                        </p>
+                    </template>
+                    <template lwc:if={documentLinkedMessage}>
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                            {documentLinkedMessage}
+                        </p>
+                    </template>
+
+                    <div class="slds-m-top_large slds-grid slds-grid_align-center slds-wrap slds-gutters_x-small">
+                        <div class="slds-col slds-p-around_xx-small">
+                            <lightning-button variant="brand" label="View Patient"
+                                icon-name="utility:user" onclick={handleViewPatient}></lightning-button>
+                        </div>
+                        <div class="slds-col slds-p-around_xx-small">
+                            <lightning-button label="View Support Plan"
+                                icon-name="utility:case" onclick={handleViewPlan}></lightning-button>
+                        </div>
+                        <div class="slds-col slds-p-around_xx-small">
+                            <lightning-button label="Start New Enrollment"
+                                icon-name="utility:upload" onclick={handleReset}></lightning-button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
 
-        <!-- Loading Spinner -->
-        <template if:true={isLoading}>
+        <!-- Spinner for everything except extraction, which has its own animation -->
+        <template lwc:if={showSpinner}>
             <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
         </template>
     </lightning-card>

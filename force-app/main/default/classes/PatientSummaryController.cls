@@ -19,7 +19,7 @@ public with sharing class PatientSummaryController {
             PatientService patSvc = new PatientService();
             List<Account> patients = patSvc.getPatientsWithPlans(new Set<Id>{ patientId });
             if (patients.isEmpty()) {
-                throw new AuraHandledException('Patient not found.');
+                throw uiError('Patient not found.');
             }
             summary.patient = patients[0];
             summary.supportPlans = patients[0].Cases;
@@ -65,7 +65,7 @@ public with sharing class PatientSummaryController {
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
-            throw new AuraHandledException('Failed to load patient summary: ' + e.getMessage());
+            throw uiError('Failed to load patient summary: ' + e.getMessage());
         }
     }
 
@@ -80,7 +80,7 @@ public with sharing class PatientSummaryController {
             AISummaryService summSvc = new AISummaryService();
             return summSvc.generateSummary(planId);
         } catch (Exception e) {
-            throw new AuraHandledException('Failed to generate plan summary: ' + e.getMessage());
+            throw uiError('Failed to generate plan summary: ' + e.getMessage());
         }
     }
 
@@ -94,5 +94,15 @@ public with sharing class PatientSummaryController {
         @AuraEnabled public List<Task> recentTasks;
         @AuraEnabled public List<Event> upcomingEvents;
         @AuraEnabled public List<Affiliation__c> affiliations;
+    }
+
+    /**
+     * Builds an AuraHandledException whose message reaches the browser. The constructor alone
+     * leaves getMessage() returning "Script-thrown exception", which is what the LWC reads.
+     */
+    private static AuraHandledException uiError(String message) {
+        AuraHandledException error = new AuraHandledException(message);
+        error.setMessage(message);
+        return error;
     }
 }

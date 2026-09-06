@@ -1,0 +1,172 @@
+.reader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    padding: 3rem 1.5rem;
+}
+
+/* ── The document being scanned ── */
+
+.reader__stage {
+    position: relative;
+    width: 7.5rem;
+    height: 9.75rem;
+    flex: none;
+}
+
+.reader__page {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+    border: 1px solid #c9c7c5;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    padding: 0.75rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    overflow: hidden;
+}
+
+.reader__line {
+    height: 0.375rem;
+    border-radius: 0.1875rem;
+    background: #e5e5e5;
+    animation: reader-fill 2.4s ease-in-out infinite;
+}
+
+.reader__line_title {
+    height: 0.5rem;
+    width: 70%;
+    background: #cfd3d8;
+}
+.reader__line_long {
+    width: 100%;
+}
+.reader__line_medium {
+    width: 78%;
+}
+.reader__line_short {
+    width: 52%;
+}
+
+/* Each line brightens a beat after the one above, so the page reads top to bottom. */
+.reader__line:nth-child(2) { animation-delay: 0.1s; }
+.reader__line:nth-child(3) { animation-delay: 0.2s; }
+.reader__line:nth-child(4) { animation-delay: 0.3s; }
+.reader__line:nth-child(5) { animation-delay: 0.4s; }
+.reader__line:nth-child(6) { animation-delay: 0.5s; }
+.reader__line:nth-child(7) { animation-delay: 0.6s; }
+.reader__line:nth-child(8) { animation-delay: 0.7s; }
+
+@keyframes reader-fill {
+    0%, 100% { background: #e5e5e5; }
+    45% { background: #b6d5f7; }
+}
+
+.reader__scan {
+    position: absolute;
+    left: -0.25rem;
+    right: -0.25rem;
+    height: 2.25rem;
+    border-radius: 0.25rem;
+    background: linear-gradient(
+        180deg,
+        rgba(21, 137, 238, 0) 0%,
+        rgba(21, 137, 238, 0.22) 45%,
+        rgba(21, 137, 238, 0.32) 50%,
+        rgba(21, 137, 238, 0.22) 55%,
+        rgba(21, 137, 238, 0) 100%
+    );
+    box-shadow: 0 0 12px rgba(21, 137, 238, 0.45);
+    animation: reader-scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes reader-scan {
+    0% { top: -2.25rem; opacity: 0; }
+    12% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { top: 9.75rem; opacity: 0; }
+}
+
+/* ── Status copy ── */
+
+.reader__copy {
+    max-width: 22rem;
+}
+
+.reader__headline {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #181818;
+    margin-bottom: 0.375rem;
+}
+
+.reader__spark {
+    color: #1589ee;
+    margin-right: 0.25rem;
+    display: inline-block;
+    animation: reader-spark 1.8s ease-in-out infinite;
+}
+
+@keyframes reader-spark {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.25); }
+}
+
+.reader__stepline {
+    font-size: 0.9375rem;
+    color: #1589ee;
+    min-height: 1.4rem;
+    font-weight: 500;
+}
+
+.reader__file {
+    font-size: 0.8125rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+    word-break: break-all;
+}
+
+.reader__dots {
+    display: flex;
+    gap: 0.375rem;
+    margin: 0.875rem 0;
+}
+
+.reader__dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: #1589ee;
+    animation: reader-bounce 1.2s ease-in-out infinite;
+}
+.reader__dot:nth-child(2) { animation-delay: 0.15s; }
+.reader__dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes reader-bounce {
+    0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-0.25rem); }
+}
+
+.reader__note {
+    font-size: 0.8125rem;
+    color: #706e6b;
+    line-height: 1.4;
+}
+
+/* Respect a reader who has asked the OS to stop animating things. */
+@media (prefers-reduced-motion: reduce) {
+    .reader__scan,
+    .reader__line,
+    .reader__dot,
+    .reader__spark {
+        animation: none;
+    }
+    .reader__scan {
+        top: 3.75rem;
+        opacity: 0.5;
+    }
+}
